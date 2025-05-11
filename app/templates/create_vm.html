@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Создать шаблон виртуальной машины</h2>
+    <form method="POST" action="{{ url_for('admin.create_template') }}">
+        {{ form.hidden_tag() }}
+
+        <div class="row g-2">
+            <div class="col-md-6">
+                <label class="form-label">Название</label>
+                <input type="text" class="form-control" name="name" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">ОС</label>
+                <input type="text" class="form-control" name="os" required>
+            </div>
+            <div class="col-md-12">
+                <label class="form-label">Описание</label>
+                <textarea class="form-control" name="description"></textarea>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Фото (имя файла)</label>
+                <input type="text" class="form-control" name="photo">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">CPU ядра</label>
+                <input type="number" class="form-control" name="cores">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">CPU частота (ГГц)</label>
+                <input type="number" step="0.1" class="form-control" name="cpu_freq">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">GPU ядра</label>
+                <input type="number" class="form-control" name="gpu_cores">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">CUDA</label>
+                <input type="number" class="form-control" name="cuda">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">GPU частота</label>
+                <input type="number" step="0.1" class="form-control" name="gpu_freq">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">RAM (GB)</label>
+                <input type="number" class="form-control" name="ram_mem">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">RAM частота</label>
+                <input type="number" class="form-control" name="ram_freq">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Диск (GB)</label>
+                <input type="number" class="form-control" name="memory">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Цена ($)</label>
+                <input type="number" class="form-control" name="price">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Скидка (%)</label>
+                <input type="number" class="form-control" name="discount" min="0" max="100">
+            </div>
+        </div>
+
+        <hr>
+
+        <div id="service-container">
+            <label class="form-label">Микросервисы</label>
+            <div class="input-group mb-2">
+                <input type="text" name="services" class="form-control" placeholder="Введите сервис">
+            </div>
+        </div>
+        <button type="button" class="btn btn-secondary mb-3" onclick="addServiceInput()">+ Добавить сервис</button>
+
+        <button type="submit" class="btn btn-primary w-100">Создать шаблон</button>
+    </form>
+</div>
+
+<script>
+function addServiceInput() {
+    const container = document.getElementById('service-container');
+    const newInput = document.createElement('div');
+    newInput.classList.add('input-group', 'mb-2');
+    newInput.innerHTML = `<input type="text" name="services" class="form-control" placeholder="Введите сервис">`;
+    container.appendChild(newInput);
+}
+</script>
+{% endblock %}

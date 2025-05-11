@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Готовые виртуальные машины</h2>
+        {% if current_user.is_authenticated and not current_user.is_admin %}
+        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createVMModal">
+            Создать свою VM
+        </button>
+        {% endif %}
+    </div>
+
+    <div class="row justify-content-center gx-4 gy-4">
+        {% for template in templates %}
+        <div class="col-md-6 col-lg-4 d-flex">
+            <div class="card shadow-sm flex-fill">
+                <div class="card-header text-center fw-bold bg-light">
+                    {{ template.os }}
+                </div>
+                <div class="ratio ratio-4x3">
+                    <img src="{{ url_for('static', filename='images/' ~ template.photo) }}"
+                         class="card-img-top object-fit-contain p-2"
+                         alt="{{ template.os }}">
+                </div>
+                <div class="card-body text-center">
+                    <h5 class="card-title fw-semibold">{{ template.name }}</h5>
+                    <p class="small text-muted">{{ template.description }}</p>
+                    <p class="mb-1"><strong>OS:</strong> {{ template.os }}</p>
+                    <p class="mb-1"><strong>CPU:</strong> {{ template.cores }} x {{ template.cpu_freq }} GHz</p>
+                    <p class="mb-1"><strong>GPU:</strong> {{ template.gpu_cores }} cores, {{ template.cuda }} CUDA</p>
+                    <p class="mb-1"><strong>RAM:</strong> {{ template.ram_mem }} GB @{{ template.ram_freq }} MHz</p>
+                    <p class="mb-1"><strong>Storage:</strong> {{ template.memory }} GB</p>
+                        {% if template.discount %}
+                            <p class="fw-bold text-danger">Discount: {{ template.discount }}%</p>
+                            <p class="fw-bold text-decoration-line-through text-muted">Price: ${{ template.price }}</p>
+                            <p class="fw-bold text-success">Price with discount: ${{ template.price - (template.price * template.discount // 100) }}</p>
+                        {% else %}
+                            <p class="fw-bold text-primary">Price: ${{ template.price }}</p>
+                        {% endif %}
+
+                </div>
+                <div class="card-footer text-center bg-white">
+                    {% if current_user.is_authenticated and current_user.is_admin %}
+                    <button class="btn btn-warning w-100"
+                            data-bs-toggle="modal" data-bs-target="#editTemplateModal"
+                            data-id="{{ template.id }}"
+                            data-name="{{ template.name }}"
+                            data-description="{{ template.description }}"
+                            data-os="{{ template.os }}"
+                            data-photo="{{ template.photo }}"
+                            data-cores="{{ template.cores }}"
+                            data-cpu_freq="{{ template.cpu_freq }}"
+                            data-gpu_cores="{{ template.gpu_cores }}"
+                            data-cuda="{{ template.cuda }}"
+                            data-gpu_freq="{{ template.gpu_freq }}"
+                            data-ram_mem="{{ template.ram_mem }}"
+                            data-ram_freq="{{ template.ram_freq }}"
+                            data-memory="{{ template.memory }}"
+                            data-price="{{ template.price }}">
+                        ✏️ Редактировать
+                    </button>
+                    {% elif current_user.is_authenticated %}
+                    <form method="POST" action="{{ url_for('user.add_to_cart', template_id=template.id) }}">
+                        <button type="submit" class="btn btn-primary w-100">Добавить в корзину</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Модалка РЕДАКТИРОВАНИЯ ТОЛЬКО для администратора -->
+{% if current_user.is_authenticated and current_user.is_admin %}
+<div class="modal fade" id="editTemplateModal" tabindex="-1" aria-labelledby="editTemplateModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('admin.edit_template') }}">
+        <div class="modal-header">
+          <h5 class="modal-title">Редактировать виртуальную машину</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" name="id" id="templateId">
+          <div class="row g-2">
+            <!-- Все input поля -->
+            <div class="col-md-6">
+              <label class="form-label">Название</label>
+              <input type="text" class="form-control" name="name" id="templateName">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">ОС</label>
+              <input type="text" class="form-control" name="os" id="templateOs">
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">Описание</label>
+              <input type="text" class="form-control" name="description" id="templateDescription">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Фото</label>
+              <input type="text" class="form-control" name="photo" id="templatePhoto">
+            </div>
+            <div class="col-4">
+              <label class="form-label">CPU ядра</label>
+              <input type="number" class="form-control" name="cores" id="templateCores">
+            </div>
+            <div class="col-4">
+              <label class="form-label">CPU частота</label>
+              <input type="number" step="0.1" class="form-control" name="cpu_freq" id="templateCpuFreq">
+            </div>
+            <div class="col-4">
+              <label class="form-label">GPU ядра</label>
+              <input type="number" class="form-control" name="gpu_cores" id="templateGpuCores">
+            </div>
+            <div class="col-4">
+              <label class="form-label">CUDA</label>
+              <input type="number" class="form-control" name="cuda" id="templateCuda">
+            </div>
+            <div class="col-4">
+              <label class="form-label">GPU частота</label>
+              <input type="number" step="0.1" class="form-control" name="gpu_freq" id="templateGpuFreq">
+            </div>
+            <div class="col-4">
+              <label class="form-label">RAM (GB)</label>
+              <input type="number" class="form-control" name="ram_mem" id="templateRamMem">
+            </div>
+            <div class="col-4">
+              <label class="form-label">RAM частота</label>
+              <input type="number" class="form-control" name="ram_freq" id="templateRamFreq">
+            </div>
+            <div class="col-4">
+              <label class="form-label">Диск (GB)</label>
+              <input type="number" class="form-control" name="memory" id="templateMemory">
+            </div>
+            <div class="col-4">
+              <label class="form-label">Цена</label>
+              <input type="number" class="form-control" name="price" id="templatePrice">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary w-100">Сохранить изменения</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Модалка СОЗДАНИЯ ТОЛЬКО для пользователя -->
+{% if current_user.is_authenticated and not current_user.is_admin %}
+<div class="modal fade" id="createVMModal" tabindex="-1" aria-labelledby="createVMModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('user.create_vm') }}">
+        <div class="modal-header">
+          <h5 class="modal-title">Создать свою виртуальную машину</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <!-- те же поля, как было -->
+          {{ super() }} <!-- тут просто вставьте прежний блок с input'ами создания -->
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success w-100">Создать</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<script>
+  const editTemplateModal = document.getElementById('editTemplateModal')
+  if (editTemplateModal) {
+    editTemplateModal.addEventListener('show.bs.modal', function (event) {
+      const button = event.relatedTarget
+      document.getElementById('templateId').value = button.getAttribute('data-id')
+      document.getElementById('templateName').value = button.getAttribute('data-name')
+      document.getElementById('templateOs').value = button.getAttribute('data-os')
+      document.getElementById('templateDescription').value = button.getAttribute('data-description')
+      document.getElementById('templatePhoto').value = button.getAttribute('data-photo')
+      document.getElementById('templateCores').value = button.getAttribute('data-cores')
+      document.getElementById('templateCpuFreq').value = button.getAttribute('data-cpu_freq')
+      document.getElementById('templateGpuCores').value = button.getAttribute('data-gpu_cores')
+      document.getElementById('templateCuda').value = button.getAttribute('data-cuda')
+      document.getElementById('templateGpuFreq').value = button.getAttribute('data-gpu_freq')
+      document.getElementById('templateRamMem').value = button.getAttribute('data-ram_mem')
+      document.getElementById('templateRamFreq').value = button.getAttribute('data-ram_freq')
+      document.getElementById('templateMemory').value = button.getAttribute('data-memory')
+      document.getElementById('templatePrice').value = button.getAttribute('data-price')
+    })
+  }
+</script>
+{% endblock %}
