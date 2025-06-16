@@ -1,6 +1,8 @@
-from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, IntegerField, FloatField
 from wtforms.validators import DataRequired, Email, EqualTo, Length
+from flask_wtf import FlaskForm
+from wtforms import StringField, IntegerField, FloatField, SubmitField
+from wtforms.validators import DataRequired, NumberRange
 
 class LoginForm(FlaskForm):
     username = StringField('Логин', validators=[DataRequired()])
@@ -25,13 +27,6 @@ class VMCreateForm(FlaskForm):
     memory = IntegerField('Memory', validators=[DataRequired()])
     submit = SubmitField('Добавить в корзину')
 
-from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, FloatField, SubmitField
-from wtforms.validators import DataRequired
-
-from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, FloatField, SubmitField
-from wtforms.validators import DataRequired, NumberRange
 
 class ConfTemplateForm(FlaskForm):
     name = StringField('Название', validators=[DataRequired()])

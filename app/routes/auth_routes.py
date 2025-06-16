@@ -40,10 +40,18 @@ def logout():
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
-
     form = RegisterForm()
     if form.validate_on_submit():
-        validate_form_fields(request.form)
+        existing_user = User.query.filter_by(username=form.username.data).first()
+        existing_email = User.query.filter_by(email=form.email.data).first()
+
+        if existing_user:
+            flash("Имя пользователя уже занято", "danger")
+            return render_template('register.html', form=form)
+
+        if existing_email:
+            flash("Email уже используется", "danger")
+            return render_template('register.html', form=form)
 
         user = User(username=form.username.data, email=form.email.data)
         user.set_password(form.password.data)
@@ -51,5 +59,5 @@ def register():
         db.session.commit()
         flash('Регистрация успешна! Войдите в систему.', 'success')
         return redirect(url_for('auth.login'))
-
     return render_template('register.html', form=form)
+

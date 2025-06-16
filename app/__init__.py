@@ -105,4 +105,3 @@ def check_create_admin_and_seed_data():
         ]
         db.session.bulk_save_objects(templates)
         db.session.commit()
-        print('✅ Тестовые шаблоны виртуальных машин добавлены в БД!')

@@ -5,6 +5,11 @@ from app.models import Configuration, VM, Cart, SSHKey, Payment, Deal, ConfTempl
 from app import db
 from app.security import validate_form_fields
 import io
+import secrets
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
+
+
 
 bp = Blueprint('user', __name__, url_prefix='/user')
 
@@ -130,7 +135,7 @@ def cart():
     cart_items = Cart.query.filter_by(user_id=current_user.id).all()
     return render_template('cart.html', cart_items=cart_items)
 
-@bp.route('/cart/delete/<int:id>')
+@bp.route('/cart/delete/<int:id>', methods=['POST'])
 @login_required
 def cart_delete(id):
     item = Cart.query.get_or_404(id)
@@ -141,6 +146,7 @@ def cart_delete(id):
     db.session.commit()
     flash('Удалено из корзины', 'info')
     return redirect(url_for('user.cart'))
+
 
 @bp.route('/cart/pay/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -158,23 +164,36 @@ def cart_pay(id):
         )
         db.session.add(payment)
         db.session.commit()
+
+        # Вычисляем текущую дату и дату через месяц
+        today = datetime.today()
+        date_start = today.strftime('%Y-%m-%d')
+        date_finish = (today + relativedelta(months=1)).strftime('%Y-%m-%d')
+
         deal = Deal(
             user_id=current_user.id,
             vm_id=item.vm_id,
             amount=item.vm.price,
-            date_start='2025-01-01',
-            date_finish='2025-12-31'
+            date_start=date_start,
+            date_finish=date_finish
         )
         db.session.add(deal)
         db.session.commit()
-        ssh_key = SSHKey(user_id=current_user.id, vm_id=item.vm_id, key_content='ssh-rsa FAKE_KEY_FOR_DEMO')
+
+        random_hex = secrets.token_hex(64)  # 512 бит
+        fake_key = f"ssh-rsa {random_hex} generated@vmshop"
+        ssh_key = SSHKey(user_id=current_user.id, vm_id=item.vm_id, key_content=fake_key)
         db.session.add(ssh_key)
         db.session.commit()
+
         db.session.delete(item)
         db.session.commit()
+
         flash('Оплата прошла. Машина активирована!', 'success')
         return redirect(url_for('user.my_vms'))
+
     return render_template('payment.html', item=item)
+
 
 @bp.route('/my_vms')
 @login_required

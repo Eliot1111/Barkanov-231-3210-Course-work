@@ -16,9 +16,7 @@ def is_safe_input(value: str) -> bool:
     return True
 
 def validate_form_fields(form_data):
-    """
-    Проверяет каждый элемент в form_data на наличие SQL-инъекций.
-    """
+
     for key, value in form_data.items():
         if not is_safe_input(value):
             abort(400, description=f"Обнаружена потенциальная SQL-инъекция в поле: {key}")

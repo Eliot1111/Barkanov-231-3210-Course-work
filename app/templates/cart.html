@@ -11,7 +11,10 @@
                     <small>Цена: ${{ item.vm.price }}</small>
                 </div>
                 <div>
-                    <a href="{{ url_for('user.cart_delete', id=item.id) }}" class="btn btn-sm btn-danger">Удалить</a>
+                    <form method="POST" action="{{ url_for('user.cart_delete', id=item.id) }}" class="d-inline">
+                        <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
+                    </form>
+
                     <a href="{{ url_for('user.cart_pay', id=item.id) }}" class="btn btn-sm btn-success">Оплатить</a>
                     <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#vmDetailsModal{{ item.id }}">
                         Посмотреть характеристики

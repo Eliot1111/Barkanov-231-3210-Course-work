@@ -4,11 +4,26 @@ from app import db
 from app.models import ConfTemplate, Service, ServiceHasConfTemplate
 from app.forms import ConfTemplateForm
 from app.security import validate_form_fields
+from functools import wraps
 
 bp = Blueprint('admin', __name__, url_prefix='/admin')
 
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            flash("Вы должны войти в систему", "warning")
+            return redirect(url_for('auth.login'))
+        if not current_user.is_admin:
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+
 @bp.route('/create_template', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def create_template():
     form = ConfTemplateForm()
     if form.validate_on_submit():
@@ -52,32 +67,42 @@ def create_template():
 
     return render_template('create_vm.html', form=form)
 
+
 @bp.route('/edit_template', methods=['POST'])
 @login_required
+@admin_required
 def edit_template():
-    if not current_user.is_admin:
-        abort(403)
-
-    validate_form_fields(request.form)
-
     template_id = request.form.get('id')
-    template = ConfTemplate.query.get_or_404(template_id)
+    if not template_id or not template_id.isdigit():
+        flash("Некорректный ID шаблона", "danger")
+        return redirect(url_for('main.index'))
 
-    template.name = request.form.get('name')
-    template.os = request.form.get('os')
-    template.description = request.form.get('description')
-    template.photo = request.form.get('photo')
-    template.cores = int(request.form.get('cores'))
-    template.cpu_freq = float(request.form.get('cpu_freq'))
-    template.gpu_cores = int(request.form.get('gpu_cores'))
-    template.cuda = int(request.form.get('cuda'))
-    template.gpu_freq = float(request.form.get('gpu_freq'))
-    template.ram_mem = int(request.form.get('ram_mem'))
-    template.ram_freq = int(request.form.get('ram_freq'))
-    template.memory = int(request.form.get('memory'))
-    template.price = int(request.form.get('price'))
-    template.discount = int(request.form.get('discount'))
+    template = ConfTemplate.query.get_or_404(int(template_id))
+
+    template.name = request.form.get('name', '').strip()
+    template.os = request.form.get('os', '').strip()
+    template.description = request.form.get('description', '').strip()
+    template.photo = request.form.get('photo', '').strip()
+
+    try:
+        template.cores = int(request.form.get('cores', 0))
+        template.cpu_freq = float(request.form.get('cpu_freq', 0.0))
+        template.gpu_cores = int(request.form.get('gpu_cores', 0))
+        template.cuda = int(request.form.get('cuda', 0))
+        template.gpu_freq = float(request.form.get('gpu_freq', 0.0))
+        template.ram_mem = int(request.form.get('ram_mem', 0))
+        template.ram_freq = int(request.form.get('ram_freq', 0))
+        template.memory = int(request.form.get('memory', 0))
+        template.price = int(request.form.get('price', 0))
+        template.discount = int(request.form.get('discount', 0))
+    except ValueError:
+        flash("Некорректные числовые значения", "danger")
+        return redirect(url_for('main.index'))
+
+    if template.discount < 0 or template.discount > 100:
+        flash("Скидка должна быть в пределах от 0 до 100", "danger")
+        return redirect(url_for('main.index'))
 
     db.session.commit()
-    flash('Шаблон обновлен!', 'success')
+    flash('Шаблон успешно обновлён!', 'success')
     return redirect(url_for('main.index'))
